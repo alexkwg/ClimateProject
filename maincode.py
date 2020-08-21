@@ -3,7 +3,13 @@ import matplotlib.pyplot as plt
 import datetime 
 import statsmodels as statsmodels
 import statistics as stats
+import xarray as xr
+import pandas as pd
 import decimal
+import os
+import numpy as np
+
+
 
 ######## DMI ARRAY CREATION #######
 ######## DMI ARRAY CREATION #######
@@ -29,6 +35,7 @@ for i in range(0, len(week)):
 date_DMI=[]
 for j in range(0, len(SSTA)):
     date_DMI.append([DMIdate[j], SSTA[j]])
+date_DMI=np.array([date_DMI])
 #print(date_DMI)    #### ARRAY OF FORMAT (DATETIME, DMI)
 
 
@@ -38,15 +45,24 @@ for j in range(0, len(SSTA)):
 ###### TRMM DATA MEGA ARRAY CREATION ######
 ###### TRMM DATA MEGA ARRAY CREATION ######
 
-def TRMMopen(k):
-    TRMMfile="C:/Users/User/Desktop/climate change project/TRMM/3B42_Daily." + str(k)+".7.nc4"
-    f20191230=netCDF4.Dataset(TRMMfile, 'r')
-    print(f20191230)
-    for i in f20191230.variables:
-        print(i, f20191230.variables[i].units)
-    print(f20191230.variables['HQprecipitation'])
-    f20191230.close()
-    
+TRMMfolder="C:/Users/User/Desktop/climate change project/TRMM1/"
+datetime_prec=[]
+for filename in os.listdir(TRMMfolder):
+    if filename.endswith('nc4'):
+        f=netCDF4.Dataset(TRMMfolder + str(filename))
+        precp=f.variables['precipitation'][:]
+        datetime_prec.append([filename[11:19], precp])
+        f.close()
+    else:
+        pass
+print("Done with array creation")
+datetime_prec=np.array(datetime_prec)   ##########PRECIPITATION DATE TIME ARRAY ########
+print(datetime_prec[0][1][0] )
+
+
+
+
+
 ##### NINO ARRAY CREATION ######
 ##### NINO ARRAY CREATION ######
 ##### NINO ARRAY CREATION ######
