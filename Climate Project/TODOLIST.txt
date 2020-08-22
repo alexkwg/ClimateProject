@@ -1,14 +1,14 @@
 # ClimateProject
 TRMM folder contains precip data
-1. code up and CHECK SNHT test.
-	Run SNHT test on daily TRMM data.
-2. Convert TRMM data into weekly TOTAL precipitation. 
-3. Resample DMI, NINO and TRMM to start and end at same weeks. I.e they should all last from Monday-Sunday?
 
-4. Separate into train+test data
- 
+1. Separate into train+test data
+2. Saave TRMM Precp dataset locally as aanother file so we can save memory? Same with Elnino + DMI
+3. For the SNHT, run it on the entire array? i.e 13x11 different iterations and on daily data from 19980101 to 20191230.
+	Plot a frequency distribution graph?
+	If there are values of T(y) where T(y)>9.95, isolate them.
+
 
 Now should have TRMM, DMI, NINO all in same weeks:
-4. Run Kendall + Spearson correlation tests of weekly total precipitation against DMI and NINO
+4. Run Cross Corelation of DMI + the 4 Ninos against each other. 
 Plot into table
 5.SARIMAX MODEL  

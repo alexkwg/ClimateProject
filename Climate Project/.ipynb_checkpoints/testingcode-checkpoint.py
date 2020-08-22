@@ -1,19 +1,3 @@
-import netCDF4
-import matplotlib.pyplot as plt
-import datetime 
-import statsmodels as statsmodels
-import statistics as stats
-import decimal
-import os
-import numpy as np
-import copy
-
-filename= 'TRMM1/3B42_Daily.19980101.7.nc4.nc4'
-f=netCDF4.Dataset(filename)
-lat, lon= [f.variables['lat'][:], f.variables['lon'][:]] #13 longitudes, 11 latitudes
-
-
-
 class ReadData:
     """
     ReadData-- generates the dataset
@@ -94,7 +78,7 @@ class ReadData:
             diff = self.toDateTime(key )-self.begin
             if(v == 0 or v> diff):
                 v = diff
-        #print(v)
+        print(v)
         return v
         
         
@@ -140,7 +124,7 @@ class ReadData:
             for i in range(4, len(linelist)):
                 date_str = self.replaceDateTime(linelist[i][1:10])
                 if (self.isInTimeRangeStr(date_str)):
-                    date_Ninos[j][date_str] =  float(linelist[i][search_range[j][0]:search_range[j][1]])            
+                    date_Ninos[j][date_str] =  decimal.Decimal(linelist[i][search_range[j][0]:search_range[j][1]])            
                 else:
                     pass
                     #this is the date we discard
@@ -189,7 +173,7 @@ class ReadData:
 
 
 reader = ReadData()
-
+    
 
 class AnalyzeData:
     "class for anaylzing the data we generated from a reader"
@@ -203,7 +187,7 @@ class AnalyzeData:
         self.snhtsetDMI = self.SNHT(reader.DMI_list)
         #snhtsetTRMM = self.SNHT(reader.TRMM_list) 
         #^^ we can't use this set, since we have more than one varaible. 
-        #QUESTION: how should we deal with this set?   ## Run through a "multidimensional test". 
+        #QUESTION: how should we deal with this set?
         self.snhtsetNino = []
         for i in reader.ElNino_list:    
             self.snhtsetNino.append(self.SNHT(i))
@@ -225,15 +209,5 @@ class AnalyzeData:
             z_2=decimal.Decimal(1.0/(n-y)) *summ2
             snhtset.append(y * (z_1 **2) + (n-y)*(z_2**2))
         return snhtset
-
-def Pearlson(x, y, lag):      #LAG means that we compare x_t against y_{t-lag} where lag is positive
-    x=x[lag:]
-    y=y[:-lag]
-    x_mean=stats.mean(x)
-    y_mean=stats.mean(y)
-    top=0
-    n=len(x)-lag
-    for j in range(0, n):
-        top=top+(x[j]-x_mean)*(y[j]-y_mean)
-    pearlson= top/(n*stats.stdev(x) * stats.stdev(y))   
-    return pearlson
+aD = AnalyzeData(reader) 
+aD.generateAllSNHT()
