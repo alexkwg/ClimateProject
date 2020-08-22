@@ -55,8 +55,8 @@ for filename in os.listdir(TRMMfolder):
         f.close()
     else:
         pass
-print("Done with array creation")
 datetime_prec=np.array(datetime_prec)
+print("Done with array creation")
 print(datetime_prec[0][1][0] )
 
 
