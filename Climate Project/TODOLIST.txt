@@ -1,0 +1,14 @@
+# ClimateProject
+TRMM folder contains precip data
+1. code up and CHECK SNHT test.
+	Run SNHT test on daily TRMM data.
+2. Convert TRMM data into weekly TOTAL precipitation. 
+3. Resample DMI, NINO and TRMM to start and end at same weeks. I.e they should all last from Monday-Sunday?
+
+4. Separate into train+test data
+ 
+
+Now should have TRMM, DMI, NINO all in same weeks:
+4. Run Kendall + Spearson correlation tests of weekly total precipitation against DMI and NINO
+Plot into table
+5.SARIMAX MODEL  
