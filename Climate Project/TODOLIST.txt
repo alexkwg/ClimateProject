@@ -2,13 +2,13 @@
 TRMM folder contains precip data
 
 1. Separate into train+test data
-2. For the SNHT, run it on the entire array? i.e 13x11 different iterations and on weekly data from 19980101 to 20191230.
+2. For the SNHT, run it on the entire array? i.e 13x11 different iterations and on weekly data from 19980101 to 20191230. (DONE)
 	Plot a frequency distribution graph?
 	If there are values of T(y) where T(y)>9.95, isolate them.
 
 
 Now should have TRMM, DMI, NINO all in same weeks:
-3. Run Cross Corelation of DMI + the 4 Ninos against each other. (Coded up Pearlson, just need to run it)
+3. Run Cross Correlation of DMI + the 4 Ninos against each other. (Coded up Pearlson, just need to run it)
 4. Run on precipitation vs climate indices
 Plot into table
 5.SARIMAX MODEL  
