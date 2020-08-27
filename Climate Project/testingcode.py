@@ -237,3 +237,9 @@ def Pearlson(x, y, lag):      #LAG means that we compare x_t against y_{t-lag} w
         top=top+(x[j]-x_mean)*(y[j]-y_mean)
     pearlson= top/(n*stats.stdev(x) * stats.stdev(y))   
     return pearlson
+a=reader.DMI_list
+b=reader.ElNino_list[0]
+t=reader.DMI_data.keys()
+plt.plot(t, a, 'r', t, b, 'g')
+plt.show()
+
