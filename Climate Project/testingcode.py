@@ -281,7 +281,8 @@ class AnalyzeData:
         return [lag, cor, pval]
 analyze = AnalyzeData(reader) 
 
-b=reader.DMI_list[:]
+#generate pearlarray
+b=reader.ElNino_list[3]
 pearlarray=[]
 for k in range(0, 13):
     lat=[]
