@@ -1,14 +1,18 @@
 # ClimateProject
 TRMM folder contains precip data
 
+DONE:
+
+
 1. Separate into train+test data
-2. For the SNHT, run it on the entire array? i.e 13x11 different iterations and on weekly data from 19980101 to 20191230. (DONE)
+2. For the SNHT, run it on the entire array? i.e 13x11 different iterations and on weekly data from 19980101 to 20191230. 
 	Plot a frequency distribution graph?
 	If there are values of T(y) where T(y)>9.95, isolate them.
 
+ToDO;
+3. Run Pearlson-correlation test between each rainfall gridpoint and (DMI, nino12, nino3, nino3.4, nino4). Run from timelag of 0 weeks to 26 weeeks.
 
-Now should have TRMM, DMI, NINO all in same weeks:
-3. Run Cross Correlation of DMI + the 4 Ninos against each other. (Coded up Pearlson, just need to run it)
-4. Run on precipitation vs climate indices
-Plot into table
-5.SARIMAX MODEL  
+4. Isolate statistically significant climate indices for each rainfall gridpoint. For example, for gridpoint (3, 4), the DMI and nino12 are the 
+only significant correlations, then we run SARIMAX of precipitation on that gridpoint using DMI and nino12 as the only "exogenous factors".
+
+5. 
