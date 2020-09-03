@@ -1,13 +1,13 @@
 import netCDF4
 import matplotlib.pyplot as plt
 import datetime 
-import statsmodels as statsmodels
+from statsmodels.tsa.stattools import adfuller
 import statistics as stats
-import decimal
 import os
 import numpy as np
 import copy
 import scipy.stats as sp
+import pandas as pd
 
 
 filename= 'TRMM1/3B42_Daily.19980101.7.nc4.nc4'
@@ -279,33 +279,51 @@ class AnalyzeData:
             pass
         cor, pval=sp.pearsonr(x, y)
         return [lag, cor, pval]
+    
+    def stationarytest(self, x):
+        df=pd.DataFrame(x)
+        df=df.diff(52)
+        df=df.diff(1)
+        rolmean=df.rolling(window=7).mean()
+        rolsd=df.rolling(window=7).std()
+        plt.plot(df, label="Original")
+        plt.plot(rolmean, label="Rolmean")
+        plt.plot(rolsd, label="Rolsd")
+        plt.legend()
+        plt.show()
+        print('Results of Dickey-Fuller Test:')
+        test = adfuller(df, autolag='AIC')
+        output =[['Test Statistic', test[0]],['p-value', test[1]],['#Lags Used', test[2]],['Number of Observations Used', test[3]]]
+        output.append(test[4])
+        print(output)
+        return 
+        
+        
 analyze = AnalyzeData(reader) 
 
+y=[reader.TRMM_acc_list[i][0][0] for i in range(1, 1146)]
+#z=[reader.TRMM_acc_list[j][6][10]/80 for j in range(0, 1146)]
+analyze.stationarytest(y)
+
 #generate pearlarray
-b=reader.ElNino_list[3]
-pearlarray=[]
-for k in range(0, 13):
-    lat=[]
-    for i in range(0, 11):
-        a=[reader.TRMM_acc_list[j][k][i]/100 for j in range(0, 1146)]
-        current=analyze.Pearson(a, b, 0)
-        for l in range(0, 52):
-            new=analyze.Pearson(a,b,l)
-            if float(new[1])>float(current[1]):
-                current=analyze.Pearson(a,b,l)
-            else:
-                pass
-        lat.append([current[0], current[1]])
-    print(lat)
-    pearlarray.append(lat)
-print(pearlarray[0])
-#a=a[31:]
-#b=b[:-31]
-#print(len(a), len(b))
-#c=list(reader.sortedKeys_DMI[31:1146])
-#plt.plot(c, b, color='r')
-#plt.plot(c, a)
-#plt.show()
+#b=reader.ElNino_list[3]
+#pearlarray=[]
+#for k in range(0, 13):
+    #lat=[]
+    #for i in range(0, 11):
+        #a=[reader.TRMM_acc_list[j][k][i]/100 for j in range(0, 1146)]
+        #current=analyze.Pearson(a, b, 0)
+        #for l in range(0, 52):
+            #new=analyze.Pearson(a,b,l)
+            #if float(new[1])>float(current[1]):
+                #current=analyze.Pearson(a,b,l)
+            #else:
+                #pass
+        #lat.append([current[0], current[1]])
+    #print(lat)
+    #pearlarray.append(lat)
+#print(pearlarray[0])
+
 
 
 
