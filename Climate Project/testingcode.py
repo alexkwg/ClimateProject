@@ -2,6 +2,7 @@ import netCDF4
 import matplotlib.pyplot as plt
 import datetime 
 from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.seasonal import seasonal_decompose
 import statistics as stats
 import os
 import numpy as np
@@ -13,7 +14,7 @@ import pandas as pd
 filename= 'TRMM1/3B42_Daily.19980101.7.nc4.nc4'
 f=netCDF4.Dataset(filename)
 lat, lon= [f.variables['lat'][:], f.variables['lon'][:]] #13 longitudes, 11 latitudes
-#print(lat, lon)
+
 
 
 class ReadData:
@@ -30,6 +31,7 @@ class ReadData:
     TRMM_acc_list = [] #weekly precepitation
     TRMM_mod7 = 6 #this is the only way to get the data to match up with NINO and DMI
     sortedKeys_TRMM = []
+    sortedKeys_acc_TRMM = []
     ElNino_data= {}
     ElNino_list = [[],[],[],[]]
     sortedKeys_Nino = [[],[],[],[]] #currently, we have 4 Nino items
@@ -92,9 +94,11 @@ class ReadData:
         for i in range(0,len(L)):
             if(i % 7 == self.TRMM_mod7): #only take number with mod of TRMM_mod7
                 TRMM_list_res.append(L[i])
+                self.sortedKeys_acc_TRMM.append(self.sortedKeys_TRMM[i])
                 #look at this sorted key, why are we missing the last key?
             
         return TRMM_list_res
+    
     
         
     def sortKeys(self,data):
@@ -165,7 +169,7 @@ class ReadData:
                 else:
                     pass
                     #this is the date we discard
-            print(len(date_Ninos[j]) )  #is 1146, since we skip one point
+            #print(len(date_Ninos[j]) )  #is 1146, since we skip one point
         f.close() 
 
         
@@ -262,12 +266,9 @@ class AnalyzeData:
             v = y * (z_1 **2) + (n-y)*(z_2**2)
             if(v > mx_v):
                 mx_v = v
-            if(v > 9.95):
-                print(v)
-                print(y)
             snhtset.append(v)
         
-        return (snhtset,mx_v)
+        return (mx_v)
     
 
 
@@ -282,28 +283,89 @@ class AnalyzeData:
     
     def stationarytest(self, x):
         df=pd.DataFrame(x)
-        df=df.diff(52)
-        df=df.diff(1)
-        rolmean=df.rolling(window=7).mean()
-        rolsd=df.rolling(window=7).std()
+        rolmean=df.rolling(window=20).mean()
+        rolsd=df.rolling(window=20).std()
         plt.plot(df, label="Original")
         plt.plot(rolmean, label="Rolmean")
         plt.plot(rolsd, label="Rolsd")
+        xcoords=[20*j for j in range(0, 24)]
+        for xc in xcoords:
+            plt.axvline(x=xc, linewidth=0.1)
         plt.legend()
         plt.show()
-        print('Results of Dickey-Fuller Test:')
-        test = adfuller(df, autolag='AIC')
-        output =[['Test Statistic', test[0]],['p-value', test[1]],['#Lags Used', test[2]],['Number of Observations Used', test[3]]]
-        output.append(test[4])
-        print(output)
-        return 
-        
-        
-analyze = AnalyzeData(reader) 
+        #print(df)
+        #print('Results of Dickey-Fuller Test:')
+        #result = adfuller(df, autolag='AIC')
+        #print('ADF Statistic: '+ str(result[0]))
+        #print('p-value: '+str(result[1]))
+        #print('n_lags: '+str(result[2]))
+        #print('n_obs: ' + str(result[3]))
+        #print('Critical Values:')
+        #for key, value in result[4].items():
+         #   print(str(key) + ": " + str(value)) 
+        #return 
+def flatten(L):
+    res = []
+    for i in L:
+        for j in i:
+            res.append(j)
+    return res
 
-y=[reader.TRMM_acc_list[i][0][0] for i in range(1, 1146)]
-#z=[reader.TRMM_acc_list[j][6][10]/80 for j in range(0, 1146)]
-analyze.stationarytest(y)
+def separateByMonth(sorted_keys,L,allowedMonths):
+    indexres = []
+    L2=[]
+    for i in range(0,len(sorted_keys)):
+        if(int(sorted_keys[i][4:6]) in allowedMonths):
+            indexres.append(i)
+    L2=[L[i] for i in indexres]
+
+    return L2
+
+
+#analyze = AnalyzeData(reader) 
+#
+#a=[reader.TRMM_acc_list[j][0][0] for j in range(0, 1146)]
+#a=flatten(separateByMonth(reader.sortedKeys_acc_TRMM,a,[8,9,10,11,12]))
+#
+b=reader.DMI_list
+b=separateByMonth(reader.sortedKeys_DMI, b, [8, 9, 10, 11, 12])
+print(b[-10:])
+    
+#
+#c=reader.ElNino_list[0]
+#c=flatten(separateByMonth(reader.sortedKeys_Nino[0], c, [8, 9, 10, 11, 12]))
+#d=reader.ElNino_list[1]
+#d=flatten(separateByMonth(reader.sortedKeys_Nino[1], d, [8, 9, 10, 11, 12]))
+#e=reader.ElNino_list[2]
+#e=flatten(separateByMonth(reader.sortedKeys_Nino[2], e, [8, 9, 10, 11, 12]))
+#f=reader.ElNino_list[3]
+#f=flatten(separateByMonth(reader.sortedKeys_Nino[3], f, [8, 9, 10, 11, 12]))
+
+#comparelist=[[b, c],[b, d],[b, e],[b, f],[c, d],[c, e],[c, f],[d, e],[d, f],[e, f]]
+#print(comparelist[0])
+    
+
+
+
+##########SNHT GRID $$$$$$$$$$$
+##########SNHT GRID $$$$$$$$$$$
+##########SNHT GRID $$$$$$$$$$$
+##########SNHT GRID $$$$$$$$$$$
+##########SNHT GRID $$$$$$$$$$$
+
+#snhtgrid=[]
+#for j in range(13):
+#    lat=[]
+#    for k in range(11):
+#        y=[float(reader.TRMM_acc_list[i][j][k]) for i in range(0, 1146)]
+#        z=analyze.SNHTALL(y)
+#        lat.append(z)
+#    snhtgrid.append(lat)
+#snhtgrid=pd.DataFrame(snhtgrid)
+#writer = pd.ExcelWriter('test.xlsx', engine='xlsxwriter')
+#snhtgrid.to_excel(writer, sheet_name='welcome', index=False)
+#writer.save()
+
 
 #generate pearlarray
 #b=reader.ElNino_list[3]
