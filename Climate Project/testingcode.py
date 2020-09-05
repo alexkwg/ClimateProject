@@ -3,12 +3,16 @@ import matplotlib.pyplot as plt
 import datetime 
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 import statistics as stats
 import os
+import HydroErr as he
 import numpy as np
 import copy
 import scipy.stats as sp
 import pandas as pd
+import random
 
 
 filename= 'TRMM1/3B42_Daily.19980101.7.nc4.nc4'
@@ -258,7 +262,7 @@ class AnalyzeData:
             summ1=0 
             for i in range(0, y): 
                 summ1 += dataset[i]-mean
-            z_1= (1.0/(y*sd)) * (summ1)
+            z_1= (1.0/(d*sd)) * (summ1)
             summ2=0
             for i in range(y, n):
                 summ2 += dataset[i]-mean
@@ -281,11 +285,11 @@ class AnalyzeData:
         cor, pval=sp.pearsonr(x, y)
         return [lag, cor, pval]
     
-    def stationarytest(self, x):
+    def stationarytest(self, x, name):
         df=pd.DataFrame(x)
         rolmean=df.rolling(window=20).mean()
         rolsd=df.rolling(window=20).std()
-        plt.plot(df, label="Original")
+        plt.plot(df, label=(str(name)) )
         plt.plot(rolmean, label="Rolmean")
         plt.plot(rolsd, label="Rolsd")
         xcoords=[20*j for j in range(0, 24)]
@@ -320,71 +324,133 @@ def separateByMonth(sorted_keys,L,allowedMonths):
     L2=[L[i] for i in indexres]
 
     return L2
+def differencing(n, L):
+    res=[]
+    for j in range(len(L)-n):
+        res.append(L[j+n]-L[j])
+    return res
+def rolmean(L, time):
+    df=pd.DataFrame(L)
+    rolmean=df.rolling(window=int(time)).mean()
+    rolmean=rolmean.dropna()
+    rolmean=rolmean.values.tolist()
+    return rolmean
+    
+
+analyze = AnalyzeData(reader) 
+# snhtgrid=[]
+# for j in range(13):
+#     lat=[]
+#     for k in range(11):
+#         y=[float(reader.TRMM_acc_list[i][j][k]) for i in range(0, 1146)]
+#         z=analyze.SNHTALL(y)
+#         lat.append(z)
+#     snhtgrid.append(lat)
+# snhtgrid=pd.DataFrame(snhtgrid)
+# writer = pd.ExcelWriter('test.xlsx', engine='xlsxwriter')
+# snhtgrid.to_excel(writer, sheet_name='welcome', index=False)
+# writer.save()
 
 
-#analyze = AnalyzeData(reader) 
+
+
+
 #
-#a=[reader.TRMM_acc_list[j][0][0] for j in range(0, 1146)]
-#a=flatten(separateByMonth(reader.sortedKeys_acc_TRMM,a,[8,9,10,11,12]))
-#
+a=[reader.TRMM_acc_list[j][0][0] for j in range(0, 1146)]
+a=separateByMonth(reader.sortedKeys_acc_TRMM,a,[9,10,11,12])
+
+# a=np.sqrt(a)
+# a=a.flatten()
+# x=flatten(rolmean(a, 16))
+# a=a[15:]
+# a=[a[j]-x[j] for j in range(len(a))]
+# a=differencing(1, a) #DIFFERENCED TRMM
+# a=[j/4 for j in a]    #length is 366
+
+
+
+
+
+
 b=reader.DMI_list
 b=separateByMonth(reader.sortedKeys_DMI, b, [8, 9, 10, 11, 12])
-print(b[-10:])
-    
-#
-#c=reader.ElNino_list[0]
-#c=flatten(separateByMonth(reader.sortedKeys_Nino[0], c, [8, 9, 10, 11, 12]))
-#d=reader.ElNino_list[1]
-#d=flatten(separateByMonth(reader.sortedKeys_Nino[1], d, [8, 9, 10, 11, 12]))
-#e=reader.ElNino_list[2]
-#e=flatten(separateByMonth(reader.sortedKeys_Nino[2], e, [8, 9, 10, 11, 12]))
-#f=reader.ElNino_list[3]
-#f=flatten(separateByMonth(reader.sortedKeys_Nino[3], f, [8, 9, 10, 11, 12]))
-
-#comparelist=[[b, c],[b, d],[b, e],[b, f],[c, d],[c, e],[c, f],[d, e],[d, f],[e, f]]
-#print(comparelist[0])
-    
+b=differencing(1, b) #ALREADY STATIONARIZED DMI
+# exog=b[480-382:]
+# exog_train=exog
+# exog_test=[exog[350:381]
+# train=a[:329]
 
 
 
-##########SNHT GRID $$$$$$$$$$$
-##########SNHT GRID $$$$$$$$$$$
-##########SNHT GRID $$$$$$$$$$$
-##########SNHT GRID $$$$$$$$$$$
-##########SNHT GRID $$$$$$$$$$$
+mod=SARIMAX(a, order=(3,3,1), seasonal_order=(1,1,0,16))
+results=mod.fit()
+forecast=results.predict(start=0, end=381)#, exog=exog_test, dynamic=350)
 
-#snhtgrid=[]
-#for j in range(13):
-#    lat=[]
-#    for k in range(11):
-#        y=[float(reader.TRMM_acc_list[i][j][k]) for i in range(0, 1146)]
-#        z=analyze.SNHTALL(y)
-#        lat.append(z)
-#    snhtgrid.append(lat)
-#snhtgrid=pd.DataFrame(snhtgrid)
-#writer = pd.ExcelWriter('test.xlsx', engine='xlsxwriter')
-#snhtgrid.to_excel(writer, sheet_name='welcome', index=False)
-#writer.save()
+
+# plt.plot(a, label='Observed')
+# plt.plot(forecast, label="Forecast")
+
+# plt.axvline(300, color='g', linewidth=0.25)
+# plt.legend()
+# plt.show()
+error=a-forecast
+plt.plot(error)
+plt.show()
+c=reader.ElNino_list[0]
+c=separateByMonth(reader.sortedKeys_Nino[0], c, [8, 9, 10, 11, 12])
+c=differencing(1, c)  #STATIONARIZED ELNINO12
+
+
+
+
+d=reader.ElNino_list[1]
+d=separateByMonth(reader.sortedKeys_Nino[1], d, [8, 9, 10, 11, 12])
+d=differencing(1, d) #STATIONARIZED ELNINO3
+
+e=reader.ElNino_list[2]
+e=separateByMonth(reader.sortedKeys_Nino[2], e, [8, 9, 10, 11, 12])
+e=differencing(1, e) #STATIONARIZED ELNINO3.4
+
+
+
+
+
+
+f=reader.ElNino_list[3]
+f=separateByMonth(reader.sortedKeys_Nino[3], f, [8, 9, 10, 11, 12])
+f=differencing(1, f) #STATIONARISED
+
 
 
 #generate pearlarray
-#b=reader.ElNino_list[3]
-#pearlarray=[]
-#for k in range(0, 13):
-    #lat=[]
-    #for i in range(0, 11):
-        #a=[reader.TRMM_acc_list[j][k][i]/100 for j in range(0, 1146)]
-        #current=analyze.Pearson(a, b, 0)
-        #for l in range(0, 52):
-            #new=analyze.Pearson(a,b,l)
-            #if float(new[1])>float(current[1]):
-                #current=analyze.Pearson(a,b,l)
-            #else:
-                #pass
-        #lat.append([current[0], current[1]])
-    #print(lat)
-    #pearlarray.append(lat)
-#print(pearlarray[0])
+# b=reader.ElNino_list[3]
+# pearlarray=[]
+# for k in range(0, 13):
+#     lat=[]
+#     for i in range(0, 11):
+#         a=[reader.TRMM_acc_list[j][k][i]/100 for j in range(0, 1146)]
+#         current=analyze.Pearson(a, b, 0)
+#         for l in range(0, 52):
+#             new=analyze.Pearson(a,b,l)
+#             if float(new[1])>float(current[1]):
+#                 current=analyze.Pearson(a,b,l)
+#             else:
+#                 pass
+#         lat.append([current[0], current[1]])
+#     print(lat)
+#     pearlarray.append(lat)
+# print(pearlarray[0])
+
+    
+
+
+
+##########SNHT GRID $$$$$$$$$$$
+##########SNHT GRID $$$$$$$$$$$
+##########SNHT GRID $$$$$$$$$$$
+##########SNHT GRID $$$$$$$$$$$
+##########SNHT GRID $$$$$$$$$$$
+
 
 
 
